@@ -3,7 +3,7 @@
 <div class="container-xl">
 	<div class="table-responsive">
 		<div class="table-wrapper">
-			<div class="table-title">
+			<div class="table-title" style="background: #e3f2fd;color: black;">
 				<div class="row">
 					<div class="col-sm-6">
 						<h2>Gestion <b>Des Sites</b></h2>
@@ -45,20 +45,39 @@
 						<td>
 							{#<a href="#editEmployeeModal" class="edit" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Modifier">&#xE254;</i></a>
 							<a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Supprimer">&#xE872;</i></a>#}
-							<a href='/acceuil/{{site.id}}' id="ddd" data-method="DELETE" data-confirm="Etes-vous sur?" class="btn btn-danger" style="color:white ;">Supprimer</a>	
+							<a href='/acceuil/{{site.id}}'  onclick="validation();" id="ddd" data-method="DELETE" data-confirm="Etes-vous sur?" class="btn btn-danger" style="color:white ;">
+							Supprimer
+							</a>
+
+							{#<button onclick="validation();">test</button>
+					<script src="sweetalert.min.js"></script>
+					<script type="text/javascript">
+					function validation()
+					{
+						swal("Ajout avec succes !","success");
+
+					}
+					</script>#}
 								
 						</td>  
 					</tr>
                 {% endfor %}
 				</tbody>
 			</table>
-			<div  id="message">
-			{% for message in app.flashes('info') %}
-				<div class="flash-info">
-					{{ message }}
-				</div>
+			{#<div  id="message">#}
+
+			<div class="container" style="width:100%;">
+  				{% for message in app.flashes('info') %}
+  					<div class="alert alert-success">
+					<strong>
+					<div class="flash-info">
+						{{ message }}
+					</div>
+					</strong>
+					</div>
 				{% endfor %}
-			</div>
+				 </div>
+			{#</div>#}
 			{#<div class="clearfix">
 				<div class="hint-text">Showing <b>5</b> out of <b>25</b> entries</div>
 				<ul class="pagination">
@@ -83,18 +102,17 @@
 					<h4 class="modal-title">Ajouter un site</h4>
 					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 				</div>
-                <div style="margin: 20px">
-                {{ form_start(form) }}
-                <div class="form-group">{{ form_row(form.nom,{'attr':{'class':'form-control'}}) }}</div>
-                <div class="form-group">{{ form_row(form.url,{'attr':{'class':'form-control'}}) }}</div>
-                <div class="form-group">{{ form_row(form.sitemap,{'attr':{'class':'form-control'}}) }}</div>
-				
-				<div style="margin-left:130px">
-				<button class="btn btn-info" data-dismiss="modal" value="Cancel">Annuler</button>
-                <button class="btn btn-success" type="submit" >Valider</button>
-                </div>
+                <div>
+					{{ form_start(form) }}
+					<div class="form-group" style="margin-left: 2px">Nom:{{ form_widget(form.nom,{'attr':{'class':'form-control'}}) }}</div>
+					<div class="form-group" style="margin-left: 2px">URL:{{ form_widget(form.url,{'attr':{'class':'form-control'}}) }}</div>
+					<div class="form-group" style="margin-left: 2px">Sitemap:{{ form_widget(form.sitemap,{'attr':{'class':'form-control'}}) }}</div>
+					<div style="margin-left:130px">
+						<button class="btn btn-info" data-dismiss="modal" value="Cancel">Annuler</button>
+						<button class="btn btn-success" type="submit" >Valider</button>
+					</div>
 
-                {{ form_end(form) }}
+					{{ form_end(form) }}
                 </div>
 				{#<div class="modal-body">					
 					<div class="form-group">
@@ -165,10 +183,18 @@
 				<div class="modal-footer">
 					<input type="button" class="btn btn-default" data-dismiss="modal" value="Annuler">
 					<a href="#ddd"><input type="submit" class="btn btn-danger" value="Supprimer"></a>
+					
 				
 				</div>
 			</form>
 		</div>
 	</div>
 </div>
+<script type="text/javascript">
+function valid()
+{
+	sweetalert("supp!","supp","error");
+	//swal("site supprimé!","suppression","success");
+}
+</script>
 {% endblock %}

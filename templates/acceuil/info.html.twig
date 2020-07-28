@@ -9,7 +9,7 @@
   <div class="container-xl">
     <div class="table-responsive">
       <div class="table-wrapper">
-        <div class="table-title">
+        <div class="table-title" style="background: #e3f2fd;color: black;">
           <div class="row">
             <div class="col-sm-6">
               <h2>
@@ -33,7 +33,7 @@
           </thead>
           <tbody>
             {% for p in listP %}
-              <tr>
+              <tr style="vertical-align: top;">
                 <td valign="top">
                   <a href="{{ p.url }}">
                     <span>
@@ -46,28 +46,34 @@
                     <div>
                       {% for content in listC %}
                         {% if content.page.id == p.id %}
-                          <div style="margin-left:400px;">
-
-                            {% for plagia in listCP %}
-                              {% if plagia.content.id == content.id %}
-                                <p style="font-size:9px;margin-bottom:0px;">
+                          <div style="margin-left:200px;">
+                          {% if content.id in list_id %}
+                                <p style="font-size:12px;margin-bottom:0px;">
                                   {{ content.text }}
                                 </p>
-                                <div style="margin-left:130px;;margin-bottom:0px;font-size:9px;">
-                                  <p>
-                                    <span style="color:blue;">URL:</span>{{ plagia.url }}
-                                  </p>
-                                  <p>
-                                    <span style="color:blue;">
-                                      Description:
-                                    </span>{{ plagia.description }}
-                                  </p>
-                                  <p>
-                                    <span style="color:blue;">
-                                      Pourcentage plagiat:
-                                    </span>{{ plagia.plagiat }}%
-                                  </p>
-                                </div>
+                          {% endif %}
+
+                            {% for plagia in listCP %}
+                              {% if plagia.content.id == content.id %}                                                                                                               
+                              {#___deb____#}          
+                                <table class="table" style="margin-left:150px;font-size:10px;">
+                                        <tbody>
+                                        <tr class="table-info">
+                                            <td style="font-weight: bold;">URL</td>
+                                            <td><a href={{ plagia.url }}>{{ plagia.url }}</a></td>
+                                        </tr>
+                                        <tr class="table-info">
+                                            <td style="font-weight: bold;">Description</td>
+                                            <td>{{ plagia.description }}</td>
+                                        </tr>
+                                        <tr class="table-info">
+                                            <td style="font-weight: bold;">Pourcentage plagiat</td>
+                                            <td>{{ plagia.plagiat }}%</td>
+                                        </tr>
+                                        </tbody>
+                                </table>
+                                {#__fin__#}
+                                
                               {% endif %}
                             {% endfor %}
                           </div>
