@@ -9,6 +9,7 @@ use App\Entity\SitePage;
 use App\Entity\Content;
 use App\Entity\ContentPlagiat;
 use App\Form\SiteType;
+use App\Form\SitePageType;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -87,48 +88,81 @@ class AcceuilController extends AbstractController
         //$response = $this->forward('App\Controller\AcceuilController::index',[]);
         //return $response;
     }
-
     /**
      * @Route("/infoSite/{id}/{nom}")
      */
     public function info($id, $nom, Request $request): Response
     {
         $listContent = [];
+        $list_id=[];
         $idp = '';
-        $listPages = $this->getDoctrine()
-            ->getRepository(SitePage::class)
-            ->findBy(['site' => $id], ['plagiat' => 'desc']);
-        #foreach ($listPages as  $i){
-        #$idp=$i->getId();
-        $listContent = $this->getDoctrine()
-            ->getRepository(Content::class)
-            ->findAll();
-        $listCP = $this->getDoctrine()
-            ->getRepository(ContentPlagiat::class)
-            ->findAll();
-
+        $listPages = $this->getDoctrine()->getRepository(SitePage::class)->findBy(['site' => $id], ['plagiat' => 'desc']);
+        $listContent = $this->getDoctrine()->getRepository(Content::class)->findAll();
+        $listCP = $this->getDoctrine()->getRepository(ContentPlagiat::class)->findAll();
+        $np=count($listCP);
+        for ($i = 0; $i < $np; $i++) {
+            $list_id[$i] =$listCP[$i]->getContent()->getId();
+        } 
         return $this->render('acceuil/info.html.twig', [
             'listP' => $listPages,
             'nom' => $nom,
             'listC' => $listContent,
             'listCP' => $listCP,
+            'list_id'=>$list_id
         ]);
-    }
-
+    }  
+//---------------------------------------------------------------------------------
     /**
-     * @Route("/test")
+     * @Route("/url_plagiat")
      */
-    public function index1(Request $request): Response
-    {
-        $url = 'https://www.sofirux.com/';
-        //exec('c:\Python26\python.exe monfichier.py arg1 arg2')
-        $result = shell_exec('python plagiarism\main.py');
-        //echo $result;
-        $type = gettype($result);
-        return $this->render('acceuil/test.html.twig', [
-            'url' => $url,
-            'result' => $result,
-            'type' => $type,
+    public function affichage(Request $request): Response
+    {   
+        $page = new SitePage();
+        $form = $this->createForm(SitePageType::class, $page);
+        $form->handleRequest($request);
+        $url=$form->get('url')->getData();
+        $result='';
+        $list_id=[];
+        $listContent=[];
+        $listCP=[];
+        $p='';
+        $np=0;
+        if ($form->isSubmitted() && $form->isValid()) {
+            $pages=$this->getDoctrine()->getRepository(SitePage::class)->findBy(['url' => $url]);
+            if($pages){
+                $p=$pages[0];
+                $listContent = $this->getDoctrine()->getRepository(Content::class)->findBy(['page' => $p->getId()]);
+                $listCP = $this->getDoctrine()->getRepository(ContentPlagiat::class)->findAll();
+                $np=count($listCP);
+                for ($i = 0; $i < $np; $i++) {
+                    $list_id[$i] =$listCP[$i]->getContent()->getId();
+                } 
+            }
+            else{
+                $page->setPlagiat('0');
+                $page->setStates('0');
+                $entityManager = $this->getDoctrine()->getManager();
+                $entityManager->persist($page);
+                $entityManager->flush();
+                //traitement
+                $result = shell_exec('python plagiarism\url_plagia.py');
+                $pages=$this->getDoctrine()->getRepository(SitePage::class)->findBy(['url' => $url],['id' => 'desc']);
+                $p=$pages[0];
+                $listContent = $this->getDoctrine()->getRepository(Content::class)->findBy(['page' => $p->getId()]);
+                $n=count($listContent);
+                $listCP = $this->getDoctrine()->getRepository(ContentPlagiat::class)->findAll();
+                $np=count($listCP);
+                for ($i = 0; $i < $np; $i++) {
+                    $list_id[$i] =$listCP[$i]->getContent()->getId();
+                } 
+            }
+        }
+        return $this->render('acceuil/url_plagiat.html.twig', [
+            'form' => $form->createView(),
+            'listC' => $listContent,
+            'listCP' => $listCP,
+            'result' =>$result,
+            'list_id'=>$list_id
         ]);
-    }
+    }    
 }
