@@ -1,3 +1,5 @@
+from mysql.connector import Error
+import mysql.connector
 import requests
 import urllib
 import random
@@ -14,10 +16,8 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from collections import OrderedDict
-Check_Search=0
+Check_Search = 0
 # _____________________________________DB_connection____________________________________
-import mysql.connector
-from mysql.connector import Error
 try:
     connection = mysql.connector.connect(host='localhost',
                                          database='plagiarism_detection',
@@ -27,11 +27,15 @@ try:
 except mysql.connector.Error as error:
     print(error)
 # _____________________________________title_URL________________________________________
+
+
 def google_scrape(url):
     thepage = urlopen(url)
     soup = BeautifulSoup(thepage, "html.parser")
     return soup.title.text
 # ___________________________________Similarity_function__________________________________
+
+
 def functionS(X: str, Y: str):
     # tokenization
     X_list = word_tokenize(X)
@@ -67,10 +71,12 @@ def functionS(X: str, Y: str):
         #print("similarity: ", cosine)
     except ZeroDivisionError:
         print("devision By 0")
-    cosine=cosine*100
-    cosine=round(cosine,2)
+    cosine = cosine*100
+    cosine = round(cosine, 2)
     return cosine
 # ___________________________________Convert_URL_to_Text___________________________________
+
+
 def convText(url: str):
     #html = requests.get(url).content
     html = urlopen(url).read()
@@ -88,6 +94,8 @@ def convText(url: str):
     text = '\n'.join(chunk for chunk in chunks if chunk)
     tableau = text.split('.')
     return text, tableau
+
+
 # ___________________________________Search_title_desc_url________________________________
 extensions = ["tn", "fr", "com", "dz", "it"]
 # This data was created by using the curl method explained above
@@ -148,7 +156,9 @@ for headers in headers_list:
     for header, value in headers.items():
         h[header] = value
     ordered_headers_list.append(h)
-def recherche(query,Check_Search):
+
+
+def recherche(query, Check_Search):
     query = urllib.parse.quote_plus(query)  # Format into URL encoding
     number_result = 5
     ce_header = random.choice(headers_list)
@@ -165,8 +175,8 @@ def recherche(query,Check_Search):
     links = []
     titles = []
     descriptions = []
-    if(result_div==[]):
-        Check_Search=1
+    if(result_div == []):
+        Check_Search = 1
     for r in result_div:
         # Checks if each element is present, else, raise exception
         try:
@@ -184,14 +194,18 @@ def recherche(query,Check_Search):
             continue
     return(links, titles, descriptions)
 # ___________________________________URL_OK________________________________________________
+
+
 def url_ok(url):
     try:
         r = requests.head(url)
-        #print(r.status_code)
+        # print(r.status_code)
         return r.status_code == 200
     except:
         return False
 # ___________________________________domaine_______________________________________________
+
+
 def domaine_url(k):
     index = k.index('w')
     urlg = k[index+4:len(k)]
@@ -199,6 +213,8 @@ def domaine_url(k):
     urlg = urlg[0:index]
     return urlg
 # ___________________________________tags__________________________________________________
+
+
 def tags(resp):
     html = resp.text
     soup = BeautifulSoup(html, 'lxml')
@@ -206,98 +222,119 @@ def tags(resp):
     random.shuffle(tags)
     return tags
 # ___________________________________Inserer_page__________________________________________
-def inserer_page(connection,reference,att,cursor):
-    cursor.execute('INSERT INTO site_page (site_id, url) VALUES(%s,%s)', reference)
+
+
+def inserer_page(connection, reference, att, cursor):
+    cursor.execute(
+        'INSERT INTO site_page (site_id, url) VALUES(%s,%s)', reference)
     connection.commit()
-    cursor.execute("""SELECT id,site_id,url FROM site_page WHERE url=%s AND site_id=%s""", att)
+    cursor.execute(
+        """SELECT id,site_id,url FROM site_page WHERE url=%s AND site_id=%s""", att)
     pages = cursor.fetchall()
     return pages
-#___________________________________Select_page____________________________________________
-def select_page(att,cursor):
-    cursor.execute("""SELECT id,site_id,url FROM site_page WHERE url=%s AND site_id=%s""", att)
+# ___________________________________Select_page____________________________________________
+
+
+def select_page(att, cursor):
+    cursor.execute(
+        """SELECT id,site_id,url FROM site_page WHERE url=%s AND site_id=%s""", att)
     pages = cursor.fetchall()
     return pages
 # ___________________________________Inserer_content_______________________________________
-def inserer_content(tableau,page_id):
+
+
+def inserer_content(tableau, page_id):
     for content in tableau:
-        cursor.execute('INSERT INTO content (page_id, text) VALUES(%s,%s)',(page_id, content))
+        cursor.execute(
+            'INSERT INTO content (page_id, text) VALUES(%s,%s)', (page_id, content))
         connection.commit()
-#___________________________________Select_contents_selon_Page_____________________________
-def select_contents_page(att,cursor):
+# ___________________________________Select_contents_selon_Page_____________________________
+
+
+def select_contents_page(att, cursor):
     cursor.execute("""SELECT * FROM content WHERE page_id=%s """, att)
     contents = cursor.fetchall()
     return contents
-#___________________________________Select_content_selon_page_&_txt________________________
-def select_content_page_txt(att,cursor):
-    cursor.execute("""SELECT * FROM content WHERE page_id=%s AND text=%s""", att)
+# ___________________________________Select_content_selon_page_&_txt________________________
+
+
+def select_content_page_txt(att, cursor):
+    cursor.execute(
+        """SELECT * FROM content WHERE page_id=%s AND text=%s""", att)
     contents = cursor.fetchall()
     return contents
-#___________________________________check_Spams________________________
-def check_spam(url,cursor):
+# ___________________________________check_Spams________________________
+
+
+def check_spam(url, cursor):
     cursor.execute("""SELECT * FROM spam """)
     spams = cursor.fetchall()
-    #spam_list=[]
-    check=False
+    # spam_list=[]
+    check = False
     for s in range(len(spams)):
         if(spams[s][1] in url):
-            check=True
-            #print(check)
-        #spam_list.append(spams[s][1])
+            check = True
+            # print(check)
+        # spam_list.append(spams[s][1])
     return check
-#__________________________Traitement_Recherche_content____________________________________
-def recherche_content(content,txt,Max_similarity,url,Check_Search):
-                            try:
-                                query = '"'+txt+'"'
-                                i = 0
-                                if(len(txt) >= 100):
-                                    time.sleep(20)
-                                    #print('Recherche__')
-                                    att0 = (content[0],)
+# __________________________Traitement_Recherche_content____________________________________
+
+
+def recherche_content(content, txt, Max_similarity, url, Check_Search):
+    try:
+        query = '"'+txt+'"'
+        i = 0
+        if(len(txt) >= 100):
+            time.sleep(20)
+            print('Recherche__')
+            att0 = (content[0],)
+            cursor.execute(
+                """SELECT * FROM content_plagiat WHERE content_id=%s """, att0)
+            contentP1 = cursor.fetchall()
+            if(contentP1 == []):
+                links, titles, descriptions = recherche(
+                    query, Check_Search)
+                time.sleep(20)
+                for j in range(len(links)):
+                    if (urlg not in links[j]):
+                        check = check_spam(links[j], cursor)
+                        if check == False:
+                            #i = i+1
+                            similarite = functionS(
+                                txt, descriptions[j])
+                            print('similarity====')
+                            print(similarite)
+                            if(similarite > Max_similarite):
+                                i = i+1
+                                urlToCheck = links[j].replace(
+                                    "/url?q=", "")
+                                urlToCheck = urlToCheck.split(
+                                    "&sa=")
+                                urlToCheck = urlToCheck[0]
+                                if(url_ok(urlToCheck)):
+                                    # ____________________________Inserer_Content_plagia_________________________
+                                    att0 = (
+                                        content[0], descriptions[j])
                                     cursor.execute(
-                                        """SELECT * FROM content_plagiat WHERE content_id=%s """, att0)
-                                    contentP1 = cursor.fetchall()
-                                    if(contentP1 == []):
-                                        links, titles, descriptions = recherche(
-                                            query,Check_Search)
-                                        time.sleep(20)
-                                        for j in range(len(links)):
-                                            if (urlg not in links[j]):
-                                                check=check_spam(links[j],cursor)
-                                                if check==False:
-                                                    #i = i+1
-                                                    similarite = functionS(
-                                                        txt, descriptions[j])
-                                                    #print('similarity====')
-                                                    #print(similarite)
-                                                    if(similarite > Max_similarite):
-                                                        i = i+1
-                                                        urlToCheck = links[j].replace(
-                                                            "/url?q=", "")
-                                                        urlToCheck = urlToCheck.split(
-                                                            "&sa=")
-                                                        urlToCheck = urlToCheck[0]
-                                                        if(url_ok(urlToCheck)):
-                                                            # ____________________________Inserer_Content_plagia_________________________
-                                                            att0 = (
-                                                                content[0], descriptions[j])
-                                                            cursor.execute(
-                                                                """SELECT * FROM content_plagiat WHERE content_id=%s AND description=%s""", att0)
-                                                            contentP = cursor.fetchall()
-                                                            #print('plagiat')
-                                                            #print(contentP)
-                                                            if(contentP == []):
-                                                                att1 = (
-                                                                    content[0], urlToCheck, descriptions[j], similarite*100)
-                                                                cursor.execute(
-                                                                    'INSERT INTO content_plagiat (content_id,url,description,plagiat) VALUES(%s,%s,%s,%s)', att1)
-                                                                connection.commit()
-                                                            # ____________________________Remplir_champ_plagia_dans_page___________________
-                                                            att2 = (1, url)
-                                                            cursor.execute(
-                                                                """UPDATE site_page SET plagiat=%s WHERE url=%s""", att2)
-                                                            connection.commit()                            
-                            except urllib.error.HTTPError:
-                                        time.sleep(10)
+                                        """SELECT * FROM content_plagiat WHERE content_id=%s AND description=%s""", att0)
+                                    contentP = cursor.fetchall()
+                                    # print('plagiat')
+                                    # print(contentP)
+                                    if(contentP == []):
+                                        att1 = (
+                                            content[0], urlToCheck, descriptions[j], similarite)
+                                        cursor.execute(
+                                            'INSERT INTO content_plagiat (content_id,url,description,plagiat) VALUES(%s,%s,%s,%s)', att1)
+                                        connection.commit()
+                                    # ____________________________Remplir_champ_plagia_dans_page___________________
+                                    att2 = (1, url)
+                                    cursor.execute(
+                                        """UPDATE site_page SET plagiat=%s WHERE url=%s""", att2)
+                                    connection.commit()
+    except urllib.error.HTTPError:
+        time.sleep(10)
+
+
 # ___________________________________Traitement____________________________________________
 try:
     att = (41,)
@@ -306,36 +343,42 @@ try:
     # _________Parcourir_les_Sites
     for row in rows:
         print(row)
-        k = row[2] #____domaine
-        urlg=domaine_url(k)
-        resp = requests.get(row[3]) # ____tags
+        k = row[2]  # ____domaine
+        urlg = domaine_url(k)
+        resp = requests.get(row[3])  # ____tags
         tags = tags(resp)
         for tag in tags:
             url = tag.text
             try:
                 att = (url, row[0])
-                pages=select_page(att,cursor)
+                pages = select_page(att, cursor)
                 if pages == []:
                     reference = (row[0], url)
                     att = (url, row[0])
-                    pages = inserer_page(connection,reference,att,cursor)# __Inserer_page_d'un_site
-                #print(pages)
+                    # __Inserer_page_d'un_site
+                    pages = inserer_page(connection, reference, att, cursor)
+                # print(pages)
                 page_id = pages[0][0]
                 att = (page_id,)
-                contents=select_contents_page(att,cursor)#___select_contents_selon_page
+                # ___select_contents_selon_page
+                contents = select_contents_page(att, cursor)
                 text, tableau = convText(url)
                 if(contents == []):
-                    inserer_content(tableau,page_id) # ___Inserer_Content_d'une_page
+                    # ___Inserer_Content_d'une_page
+                    inserer_content(tableau, page_id)
                 for content in tableau:
                     att = (page_id, content)
-                    contents=select_content_page_txt(att,cursor)#___Select_content_selon_page_&_txt
+                    # ___Select_content_selon_page_&_txt
+                    contents = select_content_page_txt(att, cursor)
                     if(contents):
                         content = contents[0]
                         txt = content[2]
-                        Max_similarite=50
-                        recherche_content(content,txt,Max_similarite,url,Check_Search)  #____Traitement_de_recherche  
-                        if (Check_Search==1):
-                            print('Recherche bloquée par google!')         
+                        Max_similarite =50
+                        # ____Traitement_de_recherche
+                        recherche_content(
+                            content, txt, Max_similarite, url, Check_Search)
+                        if (Check_Search == 1):
+                            print('Recherche bloquée par google!')
             except:
                 print('erreur de traitement !')
 except:

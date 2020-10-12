@@ -11,6 +11,9 @@ use App\Entity\ContentPlagiat;
 use App\Form\SiteType;
 use App\Form\SitePageType;
 
+use App\Entity\Compare;
+use App\Form\CompareType;
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -18,7 +21,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 class AcceuilController extends AbstractController
 {
     /**
-     * @Route("/acceuil", name="acceuil")
+     * @Route("/", name="acceuil")
      */
     public function index(Request $request): Response
     {
@@ -84,7 +87,7 @@ class AcceuilController extends AbstractController
         $entityManager->remove($site);
         $entityManager->flush($site);
         $this->addFlash('info', 'Site Supprimé !');
-        return new RedirectResponse('/acceuil');
+        return new RedirectResponse('/');
         //$response = $this->forward('App\Controller\AcceuilController::index',[]);
         //return $response;
     }
@@ -165,4 +168,40 @@ class AcceuilController extends AbstractController
             'list_id'=>$list_id
         ]);
     }    
+
+    /**
+     * @Route("/compare")
+     */
+    public function compare(Request $request): Response
+    {
+        //$text1=$this->$request->get('text1');
+        //$text2=$this->getRequest()->request->get('text2');
+        //$result = shell_exec('python plagiarism\calcul_similarite.py'. escapeshellarg($text1,$text2));
+        //return $this->render('acceuil/compare_text.html.twig', ['text1'=>$text1,'text2'=>$text2,'result' => $result,]);
+        $compare = new Compare();
+        $form = $this->createForm(CompareType::class, $compare);
+        $form->handleRequest($request);
+        $result='';
+        $r=new Compare();
+        $id=0;
+        if ($form->isSubmitted() && $form->isValid()) {
+            $compare->setCalcul('0');
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($compare);
+            $entityManager->flush();
+            set_time_limit(500);
+            ini_set('max_execution_time', 0);
+            $result = shell_exec('python plagiarism\calcul_similarite.py');
+            $list = $this->getDoctrine()->getRepository(Compare::class)->findAll();
+            foreach ($list as $p) {
+                $id = $p->getId(); }
+            $r = $this->getDoctrine()->getRepository(Compare::class)->find($id);
+            }
+        return $this->render('acceuil/compare_text.html.twig', [
+            'form' => $form->createView(),
+            'r' => $r,
+            'res' =>$result
+        ]);
+    }
+
 }
