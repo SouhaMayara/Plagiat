@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+  <script type="text/javascript">
+    function visibilite(thingId) { var targetElement; targetElement =
+    document.getElementById(thingId) ; if (targetElement.style.display ==
+    "none") { targetElement.style.display = "" ; } else {
+    targetElement.style.display = "none" ; } }
+  </script>
+  <div class="container-xl">
+    <div class="table-responsive">
+      <div class="table-wrapper">
+        <div class="table-title" style="background: #e3f2fd;color: black;">
+          <div class="row">
+            <div class="col-sm-6">
+              <h2>Generer <b>Sitemap</b></h2>
+            </div>
+          </div>
+        </div>
+        {#_____________________________________entrer url____________________________________#}
+        <div style="margin: 20px">
+        {{ form_start(form) }}
+            <div class="form-group">{{ form_row(form.url,{'attr':{'class':'form-control'}}) }}</div>
+				    
+			<div style="margin-left:130px">
+              <button onclick="javascript:visibilite('loading');" class="btn btn-success btn-lg mb-3" type="submit" >
+              Generer<i id="loading" style="display:none;" class="fa fa-spinner fa-spin"></i>
+              </button>
+            </div>
+        {{ form_end(form) }}
+        </div>
+				{#{% if res %}#}
+                <h4>Le résultat est : 
+				<spam  {#style="display:none;"#}>
+				<iframe id="imprimer" name="sitemap" allow="fullscreen"  {# seamless="seamless" scrolling="no"#}  src="/doc/sitemap.xml" ></iframe>
+				</spam>
+				{#<div>
+				<input style="background-color:#094876; width:100px;color:white;" class="btn btn-lg mb-3"  type="button" value="imprimer" onclick="imprimer();" /> 
+				</div>#}
+				<div>
+				<input style="background-color:#094876; width:100px;color:white;" class="btn btn-lg mb-3"  type="button" value="Imprimer" onclick="imprimer(sitemap);" /> 
+				</div>
+				</h4>
+                {#{% endif %}#}
+
+
+<script type="text/javascript">     
+function imprimer() {    
+	var imprimer = document.getElementById('imprimer');
+	var popupcontenu = window.open('', '_blank');
+	popupcontenu.document.open();
+	popupcontenu.document.write('<html><body onload="window.print()">' + imprimer.innerHTML + '</html>');
+	popupcontenu.document.close();
+}
+
+function imprimer(ptarget)
+{
+ptarget.focus();
+ptarget.print();
+}
+
+</script>
+ <style>
+iframe {
+  display: block;
+  border: none;         /* Reset default border */
+  height: 100vh;        /* Viewport-relative units */
+  width: calc(100% + 17px);
+
+}
+    </style>
+
+{% endblock %}
+  

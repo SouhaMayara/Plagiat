@@ -5,6 +5,7 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Site;
+
 use App\Entity\SitePage;
 use App\Entity\Content;
 use App\Entity\ContentPlagiat;
@@ -13,6 +14,8 @@ use App\Form\SitePageType;
 
 use App\Entity\Compare;
 use App\Form\CompareType;
+use App\Entity\Generate;
+use App\Form\GenerateType;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -45,7 +48,7 @@ class AcceuilController extends AbstractController
         ]);
     }
     /**
-     * @Route("/acceuil/{id}")
+     * @Route("/acceuil/{id}" , name="acceuil2")
      */
     public function supprimer($id, Request $request): Response
     {
@@ -92,7 +95,7 @@ class AcceuilController extends AbstractController
         //return $response;
     }
     /**
-     * @Route("/infoSite/{id}/{nom}")
+     * @Route("/infoSite/{id}/{nom}" ,name="info")
      */
     public function info($id, $nom, Request $request): Response
     {
@@ -116,7 +119,7 @@ class AcceuilController extends AbstractController
     }  
 //---------------------------------------------------------------------------------
     /**
-     * @Route("/url_plagiat")
+     * @Route("/url_plagiat" , name="url")
      */
     public function affichage(Request $request): Response
     {   
@@ -170,7 +173,7 @@ class AcceuilController extends AbstractController
     }    
 
     /**
-     * @Route("/compare")
+     * @Route("/compare" , name="compare")
      */
     public function compare(Request $request): Response
     {
@@ -204,4 +207,35 @@ class AcceuilController extends AbstractController
         ]);
     }
 
+
+  /**
+     * @Route("/generate" , name="generate")
+     */
+    public function generate(Request $request): Response
+    {
+        $generate = new Generate();
+        $form = $this->createForm(GenerateType::class, $generate);
+        $form->handleRequest($request);
+        $result='';
+        $r=new Generate();
+        $id=0;
+         if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($generate);
+            $entityManager->flush();
+            set_time_limit(500);
+            ini_set('max_execution_time', 0);
+            $result = shell_exec('python plagiarism\sitemap.py');
+            /*$list = $this->getDoctrine()->getRepository(Compare::class)->findAll();
+            foreach ($list as $p) {
+                $id = $p->getId(); }
+            $r = $this->getDoctrine()->getRepository(Compare::class)->find($id);*/
+            }
+        return $this->render('acceuil/generate.html.twig', [
+            'form' => $form->createView(),
+            'res' =>$result
+        ]);
+        }
+
+  
 }
